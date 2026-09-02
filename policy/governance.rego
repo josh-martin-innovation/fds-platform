@@ -10,8 +10,12 @@ package federation.governance
 #   -> returns { "result": true|false }
 # =============================================================================
 
-# Deny by default. Nothing runs unless every condition below is satisfied.
-default allow_linkage_job := false
+# DEMONSTRATION OF A DANGEROUS CHANGE:
+# The line below flips the policy from deny-by-default to ALLOW-by-default.
+# This means any request that is not explicitly denied would be permitted --
+# a catastrophic authorization weakening. The Policy-as-Code CI gate should
+# catch this on the PR and refuse to let it merge.
+default allow_linkage_job := true
 
 # Allowed roles that may request a cross-agency linkage job.
 allowed_roles := {"state_data_trustee"}
