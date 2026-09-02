@@ -1,0 +1,46 @@
+name: IaC Build & Review Gate
+on:
+  pull_request:
+    paths:
+      - "iac/**"
+      - ".github/workflows/iac-review.yml"
+  push:
+    branches: [main]
+    paths:
+      - "iac/**"
+permissions:
+  contents: read
+jobs:
+  terraform:
+    name: terraform fmt / validate / tflint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+      - name: terraform fmt (check)
+        run: terraform -chdir=iac fmt -check -recursive
+      - name: terraform init (backend disabled)
+        run: terraform -chdir=iac init -backend=false
+      - name: terraform validate
+        run: terraform -chdir=iac validate
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@v4
+      - name: tflint
+        run: tflint --chdir=iac --recursive
+        continue-on-error: true
+  checkov:
+    name: checkov (NIST/CIS security scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: iac/
+          quiet: true
+          soft_fail: true
