@@ -1,0 +1,25 @@
+name: Policy-as-Code Gate
+on:
+  pull_request:
+    paths: ["policy/**", ".github/workflows/policy-as-code.yml"]
+  push:
+    branches: [main]
+    paths: ["policy/**"]
+permissions:
+  contents: read
+jobs:
+  opa-test:
+    name: opa test (governance PDP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OPA
+        run: |
+          curl -sSL -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+          chmod +x opa && sudo mv opa /usr/local/bin/opa && opa version
+      - name: Run OPA policy unit tests
+        run: opa test policy/ -v
+      - name: Guard deny-by-default
+        run: |
+          grep -Eq 'default[[:space:]]+allow_linkage_job[[:space:]]*:=[[:space:]]*false' policy/governance.rego \
+            || { echo "::error::deny-by-default removed"; exit 1; }
