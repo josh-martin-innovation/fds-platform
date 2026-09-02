@@ -1,0 +1,17 @@
+# FDS Platform — code ownership & required reviews
+#
+# Security-relevant paths require a security-owner review. This is what
+# prevents an attacker (or an honest mistake) from weakening the governance
+# policy and its tests in the same PR without a second set of eyes.
+#
+# Replace @josh-martin-innovation with the security-owner team/handle as the
+# project grows (e.g., @your-org/security).
+
+# Governance policy and its tests — the authorization heart of the FDS.
+/policy/                       @josh-martin-innovation
+
+# CI/CD definitions — whoever controls these controls every gate.
+/.github/                      @josh-martin-innovation
+
+# Infrastructure-as-Code — deploys the platform.
+/iac/                          @josh-martin-innovation
