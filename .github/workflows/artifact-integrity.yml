@@ -1,0 +1,31 @@
+name: Artifact Integrity Gate
+on:
+  pull_request:
+    paths:
+      - "worker/**"
+      - ".github/workflows/artifact-integrity.yml"
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+permissions:
+  contents: read
+jobs:
+  python-lint:
+    name: worker syntax + lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Byte-compile (syntax gate)
+        run: |
+          python -m compileall -q worker/
+          echo "worker compiles."
+      - name: Ruff lint (advisory)
+        run: |
+          pip install --quiet ruff
+          ruff check worker/ || true
