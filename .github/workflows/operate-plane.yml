@@ -1,0 +1,61 @@
+name: Operate Plane (Phase 2)
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  pull_request:
+    paths:
+      - "policy/**"
+      - "worker/**"
+      - "iac/**"
+      - "ops/**"
+      - ".github/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  drift-and-secops:
+    name: Drift & SecOps invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check governance drift
+        run: python ops/drift/check_drift.py
+
+  compliance-evidence:
+    name: Compliance evidence pack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install OPA
+        run: |
+          curl -sSL -o opa https://openpolicyagent.org/downloads/latest/opa_linux_amd64_static
+          chmod +x opa
+          sudo mv opa /usr/local/bin/opa
+      - name: Collect evidence
+        run: python ops/compliance/collect_evidence.py
+      - name: Upload evidence pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-evidence
+          path: ops/compliance/evidence/
+          if-no-files-found: warn
+
+  audit-ledger-selfcheck:
+    name: Audit-Ledger verifier self-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run audit-verifier self-test
+        run: python ops/audit/selftest.py
