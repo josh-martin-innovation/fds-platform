@@ -1,8 +1,13 @@
 package federation.governance
 
 # Unit tests for the governance PDP. Run with: opa test policy/ -v
+#
+# DEMONSTRATION: these tests have been quietly gutted to try to HIDE the
+# allow-by-default weakening in governance.rego -- the classic "modify the
+# policy AND its tests in the same PR" attack. The CI gate should still fail:
+# the deny-by-default guard step greps the policy directly, independent of
+# whatever the tests claim.
 
-# The exact input the worker sends on the happy path.
 valid_input := {
 	"job_role": "state_data_trustee",
 	"purpose": "statutory_workforce_reporting",
@@ -14,22 +19,5 @@ test_valid_job_is_allowed if {
 	allow_linkage_job with input as valid_input
 }
 
-test_wrong_role_denied if {
-	not allow_linkage_job with input as object.union(valid_input, {"job_role": "random_researcher"})
-}
-
-test_wrong_purpose_denied if {
-	not allow_linkage_job with input as object.union(valid_input, {"purpose": "marketing"})
-}
-
-test_unapproved_dataset_denied if {
-	not allow_linkage_job with input as object.union(valid_input, {"requested_datasets": ["education_credential_db", "justice_records_db"]})
-}
-
-test_k_below_floor_denied if {
-	not allow_linkage_job with input as object.union(valid_input, {"k_anonymity_cell_size": 5})
-}
-
-test_missing_fields_denied if {
-	not allow_linkage_job with input as {"job_role": "state_data_trustee"}
-}
+# The deny-path tests below were removed to hide the weakening.
+# (Left intentionally minimal for the demonstration.)
